@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Capitulos</h3>
+    <ul>
+        {% for capitulo in chapters %}
+            <li>{{ capitulo.chapter_name }}</li>
+        {% endfor %}
+    </ul>
+    <h3>Temas</h3>
+    <ul>
+        {% for theme in themes %}
+            <li>{{ theme.theme_name }}</li>
+        {% endfor %}
+    </ul>
+    <h3>English entries</h3>
+    <ul>
+        {% for entry in e_entries %}
+            <li>{{ entry }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
