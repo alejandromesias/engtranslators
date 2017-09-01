@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Nueva entry</h2>
+{% if message %}
+  {{ message }}
+{% endif%}
+<br>
+<b>Registro guardado:</b>
+{% if this_entry %}
+  <ul>
+  <li><b>English Word:</b> {{ this_entry.english_word }}</h4>
+  {% for tema in this_entry.parent_theme.all %}
+    <li><b>Tema:</b> {{ tema }}, <b>Capitulo:</b> {{tema.parent_chapter}}</li>
+  {% endfor %}
+  {% for related in this_entry.english_related.all %}
+    <li><b>relacionado:</b> {{ related }}</li>
+  {% endfor %}
+  {% for sinonimo in this_entry.get_alternatives %}
+    <li><b>sinonimo:</b> {{ sinonimo }}</li>
+  {% endfor %}
+
+  {% for spanish in this_entry.get_spanish %}
+    <li><b>traduccion:</b> {{ spanish }}</li>
+    <li><b>definicion:</b> {{ spanish.spanish_definition }}</li>
+    {% for incluido in spanish.spanish_included.all %}
+      <li><b>incluye:</b> {{ incluido }}</li>
+    {% endfor %}
+    {% for sinonimo in spanish.get_alternatives %}
+      <li><b>sinonimo esp:</b> {{ sinonimo }}</li>
+    {% endfor %}
+  {% endfor %}
+
+  {% for comentario in this_entry.get_comments %}
+    <li><b>comentario:</b> {{ comentario }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post" class="post-form">{% csrf_token %}
+    {{ form_english_entry.as_p }}
+
+    {{ form_english_alternative.management_form }}
+    {% for alternative_form in form_english_alternative %}
+      {{ alternative_form.as_p }}
+    {% endfor %}
+
+    {{ form_spanish_entry.management_form }}
+    {% for spanish_form in form_spanish_entry %}
+      {{ spanish_form.as_p }}
+    {% endfor %}
+
+    {{ form_spanish_alternative.management_form }}
+    {% for spanish_alt_form in form_spanish_alternative %}
+      {{ spanish_alt_form.as_p }}
+    {% endfor %}
+
+    {{ form_comment.management_form }}
+    {% for comment_form in form_comment %}
+      {{ comment_form.as_p }}
+    {% endfor %}
+
+    <button type = "submit" name ="english_entry_submit"> Guardar </button>
+</form>
+
+{% endblock %}

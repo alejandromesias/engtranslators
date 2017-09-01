@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>
+  {% if not form.instance.pk %}
+    Nueva Entry
+  {% else %}
+    Editar Entry
+  {% endif %}
+</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    {{form_english_entry.as_p}}
+    {{form_english_alternative.as_p}}
+    {{form_spanish_entry.as_p}}
+    {{form_spanish_alternative.as_p}}
+    {{form_comment.as_p}}
+    <input type="submit" class="btn btn-primary" value="Submit">
+  </form>
+
+{% endblock %}

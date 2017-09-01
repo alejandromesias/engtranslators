@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Lista de términos</h3>
+    <ul>
+        {% for entry in entries %}
+            <li><a href="{{entry.id}}">{{ entry }}</a></li>
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}

@@ -9,18 +9,12 @@ class Chapter(models.Model):
     def __str__(self):
         return self.chapter_name
 
-    def get_absolute_url(self):
-        return reverse("chapters_list")
-
 class Theme(models.Model):
     theme_name = models.CharField(max_length=100, unique=True)
     parent_chapter = models.ForeignKey(Chapter, related_name = 'child_themes')
 
     def __str__(self):
         return self.theme_name
-
-    def get_absolute_url(self):
-        return reverse("chapter_detail",kwargs={'chapter':self.parent_chapter})
 
 class English_Entry(models.Model):
     english_word = models.CharField(max_length=100, unique=True)
@@ -29,9 +23,6 @@ class English_Entry(models.Model):
 
     def __str__(self):
         return self.english_word
-
-    def get_absolute_url(self):
-        return reverse("entry_detail",kwargs={'pk':self.pk})
 
     def get_alternatives(self):
         alternatives = English_Alternative.objects.filter(english_original = self)

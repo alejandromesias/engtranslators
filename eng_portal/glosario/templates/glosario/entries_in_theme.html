@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h4>Capitulo: <a href="{% url 'chapters_list' %}{{this_chapter}}"> {{this_chapter}}</h4>
+    <h3>Tema: {{this_theme}}</h3>
+    <ul>
+      {% for entry in entries_set %}
+        <li><a  href="{% url 'entry_list' %}{{entry.id}}" target="_blank">{{entry}}</a></li>
+      {% endfor %}
+    </ul>
+    <br>
+    <ul>
+      {% for alternative in alternatives_set %}
+        <li><a  href="{% url 'entry_list' %}{{alternative.english_original.id}}" target="_blank">{{alternative}}</a></li>
+      {% endfor %}
+    </ul>
+
+{% endblock %}

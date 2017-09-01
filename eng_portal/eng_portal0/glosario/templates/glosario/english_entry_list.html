@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>English entries</h2>
+        {% for entry in e_entries %}
+            <h4>{{ entry.english_word }}</h4>
+            <ul>
+                {% for tema in entry.parent_theme.all %}
+                  <li><b>Tema:</b> {{ tema }}, <b>Capitulo:</b> {{tema.parent_chapter}}</li>
+                {% endfor %}
+                {% for related in entry.english_related.all %}
+                  <li><b>relacionado:</b> {{ related }}</li>
+                {% endfor %}
+                {% for sinonimo in entry.get_alternatives %}
+                  <li><b>sinonimos:</b> {{ sinonimo }}</li>
+                {% endfor %}
+
+                {% for spanish in entry.get_spanish %}
+                  <li><b>traduccion:</b> {{ spanish }}</li>
+                  <li><b>definicion:</b> {{ spanish.spanish_definition }}</li>
+                  {% for incluido in spanish.spanish_included.all %}
+                    <li><b>incluye:</b> {{ incluido }}</li>
+                  {% endfor %}
+                  {% for sinonimo in spanish.get_alternatives %}
+                    <li><b>sinonimo esp:</b> {{ sinonimo }}</li>
+                  {% endfor %}
+                {% endfor %}
+
+                {% for comentario in entry.get_comments %}
+                  <li><b>comentario:</b> {{ comentario }}</li>
+                {% endfor %}
+
+            </ul>
+            <br>
+        {% endfor %}
+
+
+
+{% endblock %}

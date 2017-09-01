@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Busqueda de entries</h3>
+
+    <form id="searchform" action="{% url 'glosary_search' %}" method="get" accept-charset="utf-8">
+      <input class="searchfield" id="searchbox" name="query_text" type="text" placeholder="escribir aqui">
+      <button type="submit">
+        Buscar
+      </button>
+    </form>
+
+    {% if not_found %}
+      <h4>No se encontraron resultados para {{echo_query}}</h4>
+    {% elif echo_query %}
+      <h3>Resultados para {{echo_query}}:</h3>
+    {% endif %}
+
+    {% if found_in_theme %}
+      <h4>Temas:</h4>
+      <ul>
+      {% for item in found_in_theme%}
+        <li><a>{{item}}</a></li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if found_in_english_entry or found_in_english_alternative %}
+      <h4>Inglés:</h4>
+      <ul>
+      {% for item in found_in_english_entry%}
+        <li><a  href="{% url 'entry_list' %}{{item.id}}" target="_blank">{{item}}</a></li>
+      {% endfor %}
+
+      {% for item in found_in_english_alternative%}
+        <li><a  href="{% url 'entry_list' %}{{item.english_original.id}}" target="_blank">{{item}}</a></li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if found_in_spanish_total or found_in_spanish_alternative %}
+      <h4>Español:</h4>
+      <ul>
+      {% for item in found_in_spanish_total%}
+        <li><a href="{% url 'entry_list' %}{{item.english_entry.id}}" target="_blank">{{item}}</a></li>
+      {% endfor %}
+
+      {% for item in found_in_spanish_alternative%}
+        <li><a  href="{% url 'entry_list' %}{{item.spanish_original.english_entry.id}}" target="_blank">{{item}}</a></li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+{% endblock %}

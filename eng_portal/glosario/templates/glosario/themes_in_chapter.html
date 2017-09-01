@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Capitulo: {{this_chapter}}</h3>
+      <ul>
+      {% for theme in themes_set %}
+          <li><a href="{{theme.theme_name}}">{{ theme }}</a></li>
+      {% endfor %}
+      </ul>
+{% endblock %}

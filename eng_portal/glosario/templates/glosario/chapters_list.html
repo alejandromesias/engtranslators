@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Lista de captítulos</h3>
+    <ul>
+        {% for chapter in chapters %}
+            <li><a href="{{chapter.chapter_name}}">{{ chapter }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

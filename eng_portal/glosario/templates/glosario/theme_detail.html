@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Tema</h3>
+    <ul>
+      <li>Nombre: {{theme_detail}}</li>
+      <ul>
+      {% for entry in theme_detail.child_entries.all %}
+          <li><a href="{{entry.id}}">{{ entry }}</a></li>
+      {% endfor %}
+    </ul>
+    </ul>
+{% endblock %}

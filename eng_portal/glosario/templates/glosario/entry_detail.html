@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class = "jumbotron">
+
+        <h2>{{entry_detail.english_word}}</h2>
+          {% for tema in entry_detail.parent_theme.all %}
+            <h5><b>En: <a href="{% url 'chapters_list' %}{{tema.parent_chapter.chapter_name}}">{{tema.parent_chapter.chapter_name}}</a> >> <a href="{% url 'chapters_list' %}{{tema.parent_chapter.chapter_name}}/{{tema}}">{{tema}}</a></b></h5>
+          {% endfor %}
+
+
+      <div class = "container">
+        {% if entry_detail.english_alternatives.all %}
+          <h4>Sinónimos:</h4>
+          <ul>
+            {% for alternative in entry_detail.english_alternatives.all %}
+              <li>{{alternative.english_synonym}}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class = "container">
+        {% if entry_detail.english_related.all %}
+          <h4>Términos relacionados:</h4>
+          <ul>
+            {% for related in entry_detail.english_related.all %}
+              <li><a href="{% url 'entry_list' %}{{related.id}}">{{related}}</a></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+    </div>
+
+      <div class = "continer">
+        <h4>Traducción:</h4>
+        <h2>{{entry_detail.child_spanish.spanish_word}}</h2>
+        <p>{{entry_detail.child_spanish.spanish_definition}}</p>
+      </div>
+
+      <div class = "container">
+        {% if entry_detail.child_spanish.spanish_included.all %}
+          <h4>Términos incluidos:</h4>
+          <ul>
+            {% for incluido in entry_detail.child_spanish.spanish_included.all %}
+              <li><a href="{% url 'entry_list' %}{{incluido.english_entry.id}}">{{incluido}}</a></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class = "container">
+        {% if entry_detail.child_spanish.spanish_alternatives.all %}
+          <h4>Sinónimos en español:</h4>
+          <ul>
+            {% for alterno in entry_detail.child_spanish.spanish_alternatives.all %}
+              <li>{{alterno}}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class = "container">
+        {% if entry_detail.comments.all %}
+          <h3>Comentarios:</h3>
+
+            {% for comment in entry_detail.comments.all %}
+              <p>{{comment}}</p>
+              <br>
+            {% endfor %}
+
+        {% endif %}
+      </div>
+
+
+
+
+      <p><a class='btn btn-warning' href="{% url 'entry_update' pk=entry_detail.pk%}">Editar</a></p>
+
+{% endblock %}
