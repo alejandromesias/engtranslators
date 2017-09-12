@@ -55,7 +55,7 @@ ROOT_URLCONF = 'eng_portal.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATE_DIR,],
+        'DIRS': [TEMPLATE_DIR,'./templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -120,5 +120,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-LOGIN_REDIRECT = '/'
+LOGIN_URL = '/cuentas/login'
+LOGIN_REDIRECT_URL = '/'

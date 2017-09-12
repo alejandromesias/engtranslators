@@ -2,11 +2,9 @@
 
 {% block content %}
     <h3>Lista de términos</h3>
-    <ul>
+    <ol>
         {% for entry in entries %}
             <li><a href="{{entry.id}}">{{ entry }}</a></li>
         {% endfor %}
-    </ul>
-
-
+    </ol>
 {% endblock %}

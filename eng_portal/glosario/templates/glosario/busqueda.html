@@ -20,7 +20,7 @@
       <h4>Temas:</h4>
       <ul>
       {% for item in found_in_theme%}
-        <li><a>{{item}}</a></li>
+        <li><a href="{% url 'chapters_list' %}{{item.parent_chapter.chapter_name}}/{{item}}" target="_blank">{{item}}</a></li>
       {% endfor %}
       </ul>
     {% endif %}

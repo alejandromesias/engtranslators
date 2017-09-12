@@ -1,9 +1,17 @@
 from django.db import models
 from django.utils import timezone
 from django.core.urlresolvers import reverse
+from django.contrib import auth
+
+class User(auth.models.User,auth.models.PermissionsMixin):
+    def __str__(self):
+        return "@{}".format(self.username)
 
 # Create your models here.
 class Chapter(models.Model):
+    class Meta:
+        permissions = (("can_create_chapter","Can create chapter"),)
+
     chapter_name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -13,6 +21,9 @@ class Chapter(models.Model):
         return reverse("chapters_list")
 
 class Theme(models.Model):
+    class Meta:
+        permissions = (("can_create_theme","Can create theme"),)
+
     theme_name = models.CharField(max_length=100, unique=True)
     parent_chapter = models.ForeignKey(Chapter, related_name = 'child_themes')
 
@@ -23,6 +34,10 @@ class Theme(models.Model):
         return reverse("chapter_detail",kwargs={'chapter':self.parent_chapter})
 
 class English_Entry(models.Model):
+    class Meta:
+        permissions = (("can_create_entry","Can create entry"),
+                ("can_edit_entry","Can edit entry"),)
+
     english_word = models.CharField(max_length=100, unique=True)
     parent_theme = models.ManyToManyField(Theme, related_name = 'child_entries')
     english_related = models.ManyToManyField('self', null=True, blank=True, related_name = 'english_main')
@@ -32,18 +47,6 @@ class English_Entry(models.Model):
 
     def get_absolute_url(self):
         return reverse("entry_detail",kwargs={'pk':self.pk})
-
-    def get_alternatives(self):
-        alternatives = English_Alternative.objects.filter(english_original = self)
-        return alternatives
-
-    def get_spanish(self):
-        spanish = Spanish_Entry.objects.filter(english_entry = self)
-        return spanish
-
-    def get_comments(self):
-        comment = Comment.objects.filter(english_entry = self)
-        return comment
 
 
 class English_Alternative(models.Model):
@@ -74,6 +77,9 @@ class Spanish_Alternative(models.Model):
         return self.spanish_synonym
 
 class Comment(models.Model):
+    class Meta:
+        permissions = (("can_write_comment","Can write comment"),)
+
     english_entry = models.ForeignKey(English_Entry, on_delete=models.CASCADE, related_name = 'comments')
     author = models.CharField(max_length=100, default = 'engtranslator')
     text = models.TextField(max_length=500, null=False, blank=False)
@@ -82,6 +88,9 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+    def get_absolute_url(self):
+        return reverse("entry_detail",kwargs={'pk':self.english_entry.pk})
 
     def approve(self):
         self.approved_comment = True

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h4>Capitulo: <a href="{% url 'chapters_list' %}{{this_chapter}}"> {{this_chapter}}</h4>
+    <h4>Capitulo: <a href="{% url 'chapters_list' %}{{this_chapter}}"> {{this_chapter}} </a> </h4>
     <h3>Tema: {{this_theme}}</h3>
     <ul>
       {% for entry in entries_set %}

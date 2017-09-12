@@ -20,5 +20,6 @@ from django.contrib.auth import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^cuentas/', include('django.contrib.auth.urls')),
     url(r'', include('glosario.urls'))
 ]

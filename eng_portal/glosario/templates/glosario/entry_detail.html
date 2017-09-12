@@ -73,10 +73,9 @@
 
         {% endif %}
       </div>
-
-
-
+      <p><a class='btn btn-primary' href="{% url 'comment' pk=entry_detail.pk%}">COMENTAR</a></p>
 
       <p><a class='btn btn-warning' href="{% url 'entry_update' pk=entry_detail.pk%}">Editar</a></p>
+
 
 {% endblock %}

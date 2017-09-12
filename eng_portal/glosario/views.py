@@ -32,10 +32,24 @@ from django.views.generic import (View,TemplateView,ListView,
 
 from django.urls import reverse_lazy
 from django.core.urlresolvers import reverse
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from itertools import chain
 from django.db.models.functions import Lower
 from glosario.namepaginator import NamePaginator
+from . import forms
+from django.contrib.auth.models import Group, User
+
+class SignUpView(CreateView):
+    form_class = forms.UserSingupForm
+    success_url = reverse_lazy('login')
+    template_name = 'glosario/registro.html'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        grupo_registrado = Group.objects.get(name='Registrados')
+        grupo_registrado.user_set.add(self.object)
+
+        return HttpResponseRedirect(self.get_success_url())
 
 class IndexView(TemplateView):
     template_name = 'glosario/index.html'
@@ -52,15 +66,16 @@ class GlosarySearchView(ListView):
         if query:
             context['echo_query'] = query
 
-            found_in_theme = Theme.objects.filter(theme_name__icontains = query)
-            found_in_english_entry = English_Entry.objects.filter(english_word__icontains = query)
-            found_in_english_alternative = English_Alternative.objects.filter(english_synonym__icontains = query)
-            found_in_spanish_entry = Spanish_Entry.objects.filter(spanish_word__icontains = query)
-            found_in_spanish_definition = Spanish_Entry.objects.filter(spanish_definition__icontains = query)
+            found_in_theme = Theme.objects.filter(theme_name__iexact = query)
+            found_in_english_entry = English_Entry.objects.filter(english_word__iexact = query)
+            found_in_english_alternative = English_Alternative.objects.filter(english_synonym__iexact = query)
+            found_in_spanish_entry = Spanish_Entry.objects.filter(spanish_word__iexact = query)
+            found_in_spanish_definition = Spanish_Entry.objects.filter(spanish_definition__iexact = query)
             found_in_spanish_total = found_in_spanish_entry | found_in_spanish_definition
-            found_in_spanish_alternative = Spanish_Alternative.objects.filter(spanish_synonym__icontains = query)
+            found_in_spanish_alternative = Spanish_Alternative.objects.filter(spanish_synonym__iexact = query)
 
-            if(found_in_theme or found_in_english_entry or found_in_english_alternative or found_in_spanish_total or found_in_spanish_alternative ):
+            if(found_in_theme or found_in_english_entry or found_in_english_alternative or
+                found_in_spanish_total or found_in_spanish_alternative ):
                 context['found_in_theme'] = found_in_theme
                 context['found_in_english_entry'] = found_in_english_entry
                 context['found_in_english_alternative'] = found_in_english_alternative
@@ -72,15 +87,46 @@ class GlosarySearchView(ListView):
 
         return context
 
-class ChapterCreateView(CreateView):
+class ChapterCreateView(PermissionRequiredMixin,CreateView):
+    permission_required = 'glosario.can_create_chapter'
     model = Chapter
     template_name = "glosario/chapter_create.html"
     fields=('chapter_name',)
 
-class ThemeCreateView(CreateView):
+class ThemeCreateView(PermissionRequiredMixin,CreateView):
+    permission_required = 'glosario.can_create_theme'
     model = Theme
     template_name = "glosario/theme_create.html"
     fields=('theme_name','parent_chapter',)
+
+class CommentCreateView(PermissionRequiredMixin,TemplateView):
+    permission_required = 'glosario.can_write_comment'
+
+    template_name = "glosario/comment_create.html"
+    def get(self, request, *args, **kwargs):
+
+        pk = self.kwargs['pk']
+        this_entry = get_object_or_404(English_Entry, pk=pk)
+        Comment_FormSet = inlineformset_factory(English_Entry,Comment,
+            exclude=('author','approved_comment'),extra=1, can_delete=False)
+        context = {'entry_detail': this_entry,
+                'form_comment': Comment_FormSet()}
+
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        this_entry = get_object_or_404(English_Entry, pk=pk)
+        Comment_FormSet = inlineformset_factory(English_Entry,Comment,
+            exclude=('author',),extra=0, can_delete=False)
+
+        form_comment = Comment_FormSet(request.POST, instance = this_entry)
+
+        if (form_comment.is_valid()):
+            form_comment.save()
+
+        return HttpResponseRedirect(reverse("entry_detail",kwargs={'pk':this_entry.id}))
+
 
 class ChaptersListView(ListView):
     model = Chapter
@@ -108,7 +154,8 @@ class EntriesInThemeView(TemplateView):
         theme = self.kwargs['theme']
         this_theme = get_object_or_404(Theme, theme_name=theme)
         entries_set = this_theme.child_entries.all().order_by(Lower('english_word'))
-        alternatives_set = English_Alternative.objects.filter(english_original__parent_theme__theme_name = theme).order_by(Lower('english_synonym'))
+        alternatives_set = English_Alternative.objects.filter(
+            english_original__parent_theme__theme_name = theme).order_by(Lower('english_synonym'))
 
         context = {'this_chapter': chapter,
                 'this_theme': theme,
@@ -116,12 +163,6 @@ class EntriesInThemeView(TemplateView):
                 'alternatives_set': alternatives_set}
 
         return self.render_to_response(context)
-
-
-class ThemeDetailView(DetailView):
-    model = Theme
-    context_object_name = 'theme_detail'
-    template_name = 'glosario/theme_detail.html'
 
 class EntriesListView(ListView):
     model = English_Entry
@@ -134,7 +175,9 @@ class EntriesDetailView(DetailView):
     context_object_name = 'entry_detail'
     template_name = 'glosario/entry_detail.html'
 
-class EntryCreateView(TemplateView):
+class EntryCreateView(PermissionRequiredMixin, TemplateView):
+    permission_required = 'glosario.can_create_entry'
+
     template_name = 'english_entry_form.html'
 
     def get(self, request, *args, **kwargs):
@@ -179,13 +222,14 @@ class EntryCreateView(TemplateView):
                 for form in inform_spanish_entry:
                     if form.is_valid() and form.has_changed():
                         new_spanish_entry = form.save()
-                        this_spanish_entry = Spanish_Entry.objects.get(id = new_spanish_entry.id)
-                        inform_spanish_alternative = Spanish_AlternativeFormSet(request.POST, instance = this_spanish_entry)
 
-                        if (inform_spanish_alternative.is_valid()):
-                            for sform in inform_spanish_alternative:
-                                if sform.is_valid() and sform.has_changed():
-                                    sform.save()
+                    this_spanish_entry = this_entry.child_spanish
+                    inform_spanish_alternative = Spanish_AlternativeFormSet(request.POST, instance = this_spanish_entry)
+
+                    if (inform_spanish_alternative.is_valid()):
+                        for sform in inform_spanish_alternative:
+                            if sform.is_valid() and sform.has_changed():
+                                sform.save()
 
             if(inform_comment.is_valid()):
                 for form in inform_comment:
@@ -194,12 +238,10 @@ class EntryCreateView(TemplateView):
 
         return HttpResponseRedirect(reverse("entry_detail",kwargs={'pk':this_entry.id}))
 
-        # Some error occurred with the forms, display errors and forms
-        # so the user can fix it
 
-class EntryUpdateView(TemplateView):
-    model = English_Entry
-    #fields = ('english_word','parent_theme')
+class EntryUpdateView(PermissionRequiredMixin, TemplateView):
+    permission_required = 'glosario.can_edit_entry'
+
     template_name = 'english_entry_update.html'
 
     def get(self, request, *args, **kwargs):
@@ -252,13 +294,17 @@ class EntryUpdateView(TemplateView):
                 for form in inform_spanish_entry:
                     if form.is_valid() and form.has_changed():
                         new_spanish_entry = form.save()
-                        this_spanish_entry = Spanish_Entry.objects.get(id = new_spanish_entry.id)
-                        inform_spanish_alternative = Spanish_AlternativeFormSet(request.POST, instance = this_spanish_entry)
 
-                        if (inform_spanish_alternative.is_valid()):
-                            for sform in inform_spanish_alternative:
-                                if sform.is_valid() and sform.has_changed():
-                                    sform.save()
+                    this_spanish_entry = this_entry.child_spanish
+                    inform_spanish_alternative = Spanish_AlternativeFormSet(request.POST, instance = this_spanish_entry)
+
+                    print('befor alternative')
+                    if (inform_spanish_alternative.is_valid()):
+                        print('spanish alternative form is valid')
+                        for sform in inform_spanish_alternative:
+                            if sform.is_valid() and sform.has_changed():
+                                print('sform has changed')
+                                sform.save()
 
             if(inform_comment.is_valid()):
                 for form in inform_comment:

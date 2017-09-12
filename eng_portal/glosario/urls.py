@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^glosary_search/$', views.GlosarySearchView.as_view(),name='glosary_search'),
     url(r'^entry_list/$', views.EntriesListView.as_view(),name='entry_list'),
     url(r'^entry_list/(?P<pk>[-\w]+)/$', views.EntriesDetailView.as_view(),name='entry_detail'),
+    url(r'^entry_list/(?P<pk>[-\w]+)/comment/$', views.CommentCreateView.as_view(),name='comment'),
     url(r'^chapters_list/$', views.ChaptersListView.as_view(),name='chapters_list'),
     url(r'^chapters_list/(?P<chapter>[-\w\s]+)/$', views.ThemesInChapterView.as_view(),name='chapter_detail'),
     url(r'^chapters_list/(?P<chapter>[-\w\s]+)/(?P<theme>[-\w\s]+)/$', views.EntriesInThemeView.as_view(),name='theme_detail'),
@@ -14,4 +15,5 @@ urlpatterns = [
     url(r'^entry_list/update/(?P<pk>[-\w]+)/$', views.EntryUpdateView.as_view(),name='entry_update'),
     url(r'^chapter_create/$', views.ChapterCreateView.as_view(),name='chapter_create'),
     url(r'^theme_create/$', views.ThemeCreateView.as_view(),name='theme_create'),
+    url(r'^sign_up/$', views.SignUpView.as_view(),name='sign_up'),
 ]
