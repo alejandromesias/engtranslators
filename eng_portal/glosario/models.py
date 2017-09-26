@@ -1,11 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.urlresolvers import reverse
-from django.contrib import auth
-
-class User(auth.models.User,auth.models.PermissionsMixin):
-    def __str__(self):
-        return "@{}".format(self.username)
+from django.contrib.auth.models import Group, User
 
 # Create your models here.
 class Chapter(models.Model):
@@ -36,11 +32,12 @@ class Theme(models.Model):
 class English_Entry(models.Model):
     class Meta:
         permissions = (("can_create_entry","Can create entry"),
-                ("can_edit_entry","Can edit entry"),)
+                ("can_edit_entry","Can edit entry"),
+                ("can_modify_users","Can modify users"),)
 
     english_word = models.CharField(max_length=100, unique=True)
     parent_theme = models.ManyToManyField(Theme, related_name = 'child_entries')
-    english_related = models.ManyToManyField('self', null=True, blank=True, related_name = 'english_main')
+    english_related = models.ManyToManyField('self', blank=True, related_name = 'english_main')
 
     def __str__(self):
         return self.english_word
@@ -60,7 +57,7 @@ class Spanish_Entry(models.Model):
     english_entry = models.OneToOneField(English_Entry, on_delete=models.CASCADE, related_name = 'child_spanish')
     spanish_word = models.CharField(max_length=100, unique=True, null=False, blank=False)
     spanish_definition = models.TextField(max_length=1000, null=True, blank=True)
-    spanish_included = models.ManyToManyField('self', symmetrical=False, null=True, blank=True, related_name = 'spanish_main')
+    spanish_included = models.ManyToManyField('self', symmetrical=False, blank=True, related_name = 'spanish_main')
 
     def __str__(self):
         return self.spanish_word
@@ -95,3 +92,18 @@ class Comment(models.Model):
     def approve(self):
         self.approved_comment = True
         self.save()
+
+class Favorite(models.Model):
+    class Meta:
+        permissions = (("can_mark_favorites","Can mark favorites"),)
+
+    english_entry = models.ForeignKey(English_Entry, on_delete=models.CASCADE, related_name = 'favorited')
+    by_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'user_favorites')
+    created_date = models.DateTimeField(default=timezone.now)
+    approved_favorite = models.BooleanField(default=True)
+
+    def __str__(self):
+        return "{}, de {}".format(self.english_entry, self.by_user.username)
+
+    def get_absolute_url(self):
+        return reverse("entry_detail",kwargs={'pk':self.english_entry.pk})

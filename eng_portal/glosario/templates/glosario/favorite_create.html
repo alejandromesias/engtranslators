@@ -62,6 +62,13 @@
     {% endif %}
   </div>
 
+  <h3>¿Desea agregar como favorito?</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" class="btn btn-primary" value="Guardar">
+  </form>
+
   <div class = "container">
     {% if entry_detail.comments.all %}
       <h3>Comentarios:</h3>
@@ -75,12 +82,5 @@
 
     {% endif %}
   </div>
-
-    <h3>Nuevo commentario</h3>
-    <form method="post">
-      {% csrf_token %}
-      {{form.as_p}}
-      <input type="submit" class="btn btn-primary" value="Guardar">
-    </form>
 
 {% endblock %}

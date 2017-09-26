@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  {% if de_usuario %}
+    <h2>Panel de {{de_usuario}}</h2>
+  {% else %}
+    <div class = "jumbotron">
+      <h1>Engineering Translators</h1>
+      <h2>Glosario</h2>
+    </div>
+    <h2>Interacciones recientes</h2>
+  {% endif %}
+
+<div class="row">
+    <div class="col-sm-8">
+      <h3>Commentarios</h3>
+        {% for comment in comments %}
+            <h4><a href="{% url 'entry_list' %}{{comment.english_entry.id}}">{{comment.english_entry}}</a></h4>
+            <p>{{ comment }}</p>
+            <h5>{{comment.author}},  {{comment.created_date}}</h5>
+            <br>
+        {% endfor %}
+    </div>
+    <div class="col-sm-4">
+      <h3>Favoritos</h3>
+        {% for favorite in favorites %}
+            <h4><a href="{% url 'entry_list' %}{{favorite.english_entry.id}}">{{ favorite.english_entry }}</a></h4>
+            <h5>{{favorite.by_user}},  {{favorite.created_date}}</h5>
+            <br>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Manejo de Usuarios</h2>
+    <h3>Grupo de <b>{{this_group}}</b></h3>
+    <ul>
+      {% for user in users_list %}
+          <li><a href="{{user.id}}">{{ user }}</a></li>
+      {% endfor %}
+    </ul>
+
+{% endblock %}

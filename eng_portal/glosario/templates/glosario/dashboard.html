@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>
+    Dashboard de {{de_usuario}}
+</h2>
+<div class="row">
+  <h3>Menú de acciones</h3>
+
+    <div class="col-sm-6">
+      <ul>
+        <li><a class="navbar-link" href="{% url 'chapter_create' %}">Crear nuevo capitulo</a></li>
+        <li><a class="navbar-link" href="{% url 'theme_create' %}">Crear nuevo tema</a></li>
+        <li><a class="navbar-link" href="{% url 'entry_create' %}">Crear nuevo término</a></li>
+      </ul>
+    </div>
+    <div class="col-sm-6">
+        <li><a class="navbar-link" href="{% url 'groups_list' %}">Manejo de Usuarios</a></li>
+        <li><a class="navbar-link" href="{% url 'admin:index' %}">Django Admin</a></li>
+    </div>
+
+</div>
+<div class="row">
+  <h3>Mis interacciones</h3>
+    <div class="col-sm-8">
+      <h3>Commentarios</h3>
+        {% for comment in comments %}
+            <h4><a href="{% url 'entry_list' %}{{comment.english_entry.id}}">{{comment.english_entry}}</a></h4>
+            <p>{{ comment }}</p>
+            <h5>{{comment.author}},  {{comment.created_date}}</h5>
+            <br>
+        {% endfor %}
+    </div>
+    <div class="col-sm-4">
+      <h3>Favoritos</h3>
+        {% for favorite in favorites %}
+            <h4><a href="{% url 'entry_list' %}{{favorite.english_entry.id}}">{{ favorite.english_entry }}</a></h4>
+            <h5>{{favorite.by_user}},  {{favorite.created_date}}</h5>
+            <br>
+        {% endfor %}
+    </div>
+{% endblock %}

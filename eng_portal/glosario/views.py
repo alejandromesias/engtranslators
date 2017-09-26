@@ -13,7 +13,8 @@ from glosario.models import (
  English_Alternative,
  Spanish_Entry,
  Spanish_Alternative,
- Comment
+ Comment,
+ Favorite
 )
 from glosario.forms import (
  ChapterForm,
@@ -38,6 +39,40 @@ from django.db.models.functions import Lower
 from glosario.namepaginator import NamePaginator
 from . import forms
 from django.contrib.auth.models import Group, User
+from django.contrib import messages
+
+class GroupsListView(PermissionRequiredMixin,ListView):
+    permission_required = 'glosario.can_modify_users'
+    template_name = 'glosario/groups_list.html'
+    model = Group
+    context_object_name = 'my_groups'
+
+class UsersInGroupView(PermissionRequiredMixin,TemplateView):
+    permission_required = 'glosario.can_modify_users'
+    template_name = 'glosario/group_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        group_name = self.kwargs['group_name']
+        this_group = get_object_or_404(Group, name=group_name)
+        users_list = User.objects.filter(groups = this_group)
+
+        context = {'this_group': this_group.name,
+                'users_list': users_list}
+
+        return self.render_to_response(context)
+
+class UserModifyView(PermissionRequiredMixin,UpdateView):
+    permission_required = 'glosario.can_create_chapter'
+    template_name = 'glosario/user_modify.html'
+    model = User
+    fields = ('username','email','groups','is_active')
+
+    def get_object(self, queryset=None):
+        obj = User.objects.get(id=self.kwargs['pk'])
+        return obj
+
+    def get_success_url(self):
+        return reverse_lazy('group_detail', kwargs={'group_name': self.kwargs['group_name']})
 
 class SignUpView(CreateView):
     form_class = forms.UserSingupForm
@@ -50,6 +85,36 @@ class SignUpView(CreateView):
         grupo_registrado.user_set.add(self.object)
 
         return HttpResponseRedirect(self.get_success_url())
+
+class FeedView(TemplateView):
+    template_name = 'glosario/feed_base.html'
+    lista_comments = Comment.objects.all().order_by('-created_date')
+    lista_favoritos = Favorite.objects.all().order_by('-created_date')
+
+    def get_context_data(self, **kwargs):
+        context = super(FeedView, self).get_context_data(**kwargs)
+        context['comments'] = self.lista_comments[:40]
+        context['favorites'] = self.lista_favoritos[:40]
+        return context
+
+class UserPanelView(TemplateView):
+
+    lista_comments = Comment.objects.all().order_by('-created_date')
+    lista_favoritos = Favorite.objects.all().order_by('-created_date')
+
+    def get_template_names(self):
+        if self.request.user.groups.filter(name = "Administradores").exists() :
+            template_name = 'glosario/dashboard.html'
+        else:
+            template_name = 'glosario/feed_base.html'
+        return [template_name]
+
+    def get_context_data(self, **kwargs):
+        context = super(UserPanelView, self).get_context_data(**kwargs)
+        context['comments'] = self.lista_comments.filter(author=self.request.user)[:20]
+        context['favorites'] = self.lista_favoritos.filter(by_user=self.request.user)[:20]
+        context['de_usuario'] = self.request.user.username
+        return context
 
 class IndexView(TemplateView):
     template_name = 'glosario/index.html'
@@ -66,13 +131,13 @@ class GlosarySearchView(ListView):
         if query:
             context['echo_query'] = query
 
-            found_in_theme = Theme.objects.filter(theme_name__iexact = query)
-            found_in_english_entry = English_Entry.objects.filter(english_word__iexact = query)
-            found_in_english_alternative = English_Alternative.objects.filter(english_synonym__iexact = query)
-            found_in_spanish_entry = Spanish_Entry.objects.filter(spanish_word__iexact = query)
-            found_in_spanish_definition = Spanish_Entry.objects.filter(spanish_definition__iexact = query)
+            found_in_theme = Theme.objects.filter(theme_name__icontains = query)
+            found_in_english_entry = English_Entry.objects.filter(english_word__icontains = query)
+            found_in_english_alternative = English_Alternative.objects.filter(english_synonym__icontains = query)
+            found_in_spanish_entry = Spanish_Entry.objects.filter(spanish_word__icontains = query)
+            found_in_spanish_definition = Spanish_Entry.objects.filter(spanish_definition__icontains = query)
             found_in_spanish_total = found_in_spanish_entry | found_in_spanish_definition
-            found_in_spanish_alternative = Spanish_Alternative.objects.filter(spanish_synonym__iexact = query)
+            found_in_spanish_alternative = Spanish_Alternative.objects.filter(spanish_synonym__icontains = query)
 
             if(found_in_theme or found_in_english_entry or found_in_english_alternative or
                 found_in_spanish_total or found_in_spanish_alternative ):
@@ -99,31 +164,54 @@ class ThemeCreateView(PermissionRequiredMixin,CreateView):
     template_name = "glosario/theme_create.html"
     fields=('theme_name','parent_chapter',)
 
-class CommentCreateView(PermissionRequiredMixin,TemplateView):
+class CommentCreateView(PermissionRequiredMixin,CreateView):
     permission_required = 'glosario.can_write_comment'
-
+    model = Comment
     template_name = "glosario/comment_create.html"
-    def get(self, request, *args, **kwargs):
+    fields=('text',)
 
+    def get_context_data(self, **kwargs):
+        context = super(CommentCreateView, self).get_context_data(**kwargs)
         pk = self.kwargs['pk']
         this_entry = get_object_or_404(English_Entry, pk=pk)
-        Comment_FormSet = inlineformset_factory(English_Entry,Comment,
-            exclude=('author','approved_comment'),extra=1, can_delete=False)
-        context = {'entry_detail': this_entry,
-                'form_comment': Comment_FormSet()}
+        context['entry_detail']=this_entry
 
-        return self.render_to_response(context)
+        return context
 
-    def post(self, request, *args, **kwargs):
+    def form_valid(self, form):
         pk = self.kwargs['pk']
         this_entry = get_object_or_404(English_Entry, pk=pk)
-        Comment_FormSet = inlineformset_factory(English_Entry,Comment,
-            exclude=('author',),extra=0, can_delete=False)
 
-        form_comment = Comment_FormSet(request.POST, instance = this_entry)
+        comment = form.save(commit=False)
+        comment.english_entry = this_entry
+        comment.author = self.request.user
+        comment.save()
 
-        if (form_comment.is_valid()):
-            form_comment.save()
+        return HttpResponseRedirect(reverse("entry_detail",kwargs={'pk':this_entry.id}))
+
+class FavoriteCreateView(PermissionRequiredMixin,CreateView):
+    permission_required = 'glosario.can_mark_favorites'
+    model= Favorite
+    template_name = 'glosario/favorite_create.html'
+    fields=()
+
+    def get_context_data(self, **kwargs):
+        context = super(FavoriteCreateView, self).get_context_data(**kwargs)
+        pk = self.kwargs['pk']
+        this_entry = get_object_or_404(English_Entry, pk=pk)
+        context['entry_detail']=this_entry
+
+        return context
+
+    def form_valid(self, form):
+        pk = self.kwargs['pk']
+        this_entry = get_object_or_404(English_Entry, pk=pk)
+
+        favorite = form.save(commit=False)
+        favorite.english_entry = this_entry
+        favorite.by_user = self.request.user
+        favorite.save()
+        messages.success(self.request, 'Favorito agregado!')
 
         return HttpResponseRedirect(reverse("entry_detail",kwargs={'pk':this_entry.id}))
 
@@ -144,7 +232,6 @@ class ThemesInChapterView(TemplateView):
                 'themes_set': themes_set}
 
         return self.render_to_response(context)
-
 
 class EntriesInThemeView(TemplateView):
     template_name = 'glosario/entries_in_theme.html'
@@ -223,6 +310,7 @@ class EntryCreateView(PermissionRequiredMixin, TemplateView):
                     if form.is_valid() and form.has_changed():
                         new_spanish_entry = form.save()
 
+                    #this_spanish_entry = Spanish_Entry.objects.get(id = new_spanish_entry.id)
                     this_spanish_entry = this_entry.child_spanish
                     inform_spanish_alternative = Spanish_AlternativeFormSet(request.POST, instance = this_spanish_entry)
 

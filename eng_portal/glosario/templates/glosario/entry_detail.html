@@ -61,21 +61,45 @@
           </ul>
         {% endif %}
       </div>
+      <br>
+      <p><a class='btn btn-primary' href="{% url 'mark_favorite' pk=entry_detail.pk%}">Favorito!!</a></p>
 
       <div class = "container">
         {% if entry_detail.comments.all %}
           <h3>Comentarios:</h3>
 
             {% for comment in entry_detail.comments.all %}
+              <h4>Autor: {{comment.author}}</h4>
               <p>{{comment}}</p>
+              <h5>{{comment.created_date}}</h5>
               <br>
             {% endfor %}
 
         {% endif %}
       </div>
-      <p><a class='btn btn-primary' href="{% url 'comment' pk=entry_detail.pk%}">COMENTAR</a></p>
 
+      <div class = "container">
+        {% if messages %}
+            {% for message in messages %}
+              <h3>{{ message }}</h3>
+            {% endfor %}
+        {% endif %}
+      </div>
+
+      <p><a class='btn btn-primary' href="{% url 'comment' pk=entry_detail.pk%}">COMENTAR</a></p>
+      <br>
       <p><a class='btn btn-warning' href="{% url 'entry_update' pk=entry_detail.pk%}">Editar</a></p>
+
+      <div class = "container">
+        {% if entry_detail.favorited.all %}
+          <h3>Favorito de:</h3>
+
+            {% for favorite in entry_detail.favorited.all %}
+              <h4> {{favorite.by_user}} </h4>
+            {% endfor %}
+
+        {% endif %}
+      </div>
 
 
 {% endblock %}

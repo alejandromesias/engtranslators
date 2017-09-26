@@ -6,7 +6,8 @@ from glosario.models import (
  English_Alternative,
  Spanish_Entry,
  Spanish_Alternative,
- Comment
+ Comment,
+ Favorite,
 )
 # Register your models here.
 
@@ -17,3 +18,4 @@ admin.site.register(English_Alternative)
 admin.site.register(Spanish_Entry)
 admin.site.register(Spanish_Alternative)
 admin.site.register(Comment)
+admin.site.register(Favorite)

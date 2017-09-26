@@ -11,21 +11,20 @@
     <nav class="navbar navbar-default navbar-static-top">
       <div class="container">
         <ul class="nav navbar-nav">
-          <li><a class="navbar-brand" href="{% url 'index' %}">inicio</a></li>
+          <li><a class="navbar-brand" href="{% url 'index' %}">GLOSARIO</a></li>
           <li><a class="navbar-link" href="{% url 'glosary_search' %}">Buscar</a></li>
           <li><a class="navbar-link" href="{% url 'chapters_list' %}">Explorar</a></li>
-          <li><a class="navbar-link" href="{% url 'entry_list' %}">Lista de Términos</a></li>
-          <li><a class="navbar-link" href="{% url 'entry_create' %}">Crear nuevo término</a></li>
-          <li><a class="navbar-link" href="{% url 'chapter_create' %}">Crear nuevo capitulo</a></li>
-          <li><a class="navbar-link" href="{% url 'theme_create' %}">Crear nuevo tema</a></li>
-          <li><a class="navbar-link" href="{% url 'admin:index' %}">Admin</a></li>
-          <li><a class="navbar-link" href="{% url 'sign_up' %}">Registrarse</a></li>
+          <li><a class="navbar-link" href="{% url 'entry_list' %}">Lista de términos</a></li>
+
           {% if user.is_authenticated %}
+            <li><a class="navbar-link" href="{% url 'user_panel' %}">Mi Perfil</a></li>
             <li> <a>Usuario: {{ user.get_username }}</a></li>
-            <li><a href="{% url 'logout' %}?next={% url 'index' %}">cerrar sesion</a></li>
+            <li><a href="{% url 'logout' %}?next={% url 'index' %}">Cerrar sesion</a></li>
           {% else %}
-            <li><a href="{% url 'login' %}?next={{request.path}}">iniciar sesion</a></li>
+            <li><a href="{% url 'login' %}?next={{request.path}}">Iniciar sesion</a></li>
+            <li><a class="navbar-link" href="{% url 'sign_up' %}">Registrarse</a></li>
           {% endif %}
+
         </ul>
       </div>
     </nav>

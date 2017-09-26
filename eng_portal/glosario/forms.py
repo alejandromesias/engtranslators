@@ -24,8 +24,6 @@ class UserSingupForm(UserCreationForm):
         self.fields['username'].label = 'Nombre de usuario'
         self.fields['email'].label = 'correo electrónico'
 
-
-
 class ChapterForm(forms.ModelForm):
 
     class Meta:
